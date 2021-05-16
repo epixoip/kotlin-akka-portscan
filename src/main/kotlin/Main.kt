@@ -51,20 +51,20 @@ object Main {
             maxScanners = totalPorts
         }
 
-        var scansRunning = CountDownLatch(maxScanners)
-        scansComplete    = CountDownLatch(maxScanners)
+        var scannerPool = CountDownLatch(maxScanners)
+        scansComplete   = CountDownLatch(maxScanners)
 
         hosts.forEach { host ->
             ports.forEach { port ->
                 log.debug("Scanning $host:$port")
-                scansRunning.countDown()
+                scannerPool.countDown()
 
                 system.actorOf(Props.create(Scanner::class.java), "$host:$port")
                     .tell(Scan(host, port), ActorRef.noSender())
 
-                if (scansRunning.count == 0L) {
+                if (scannerPool.count == 0L) {
                     scansComplete.await()
-                    scansRunning  = CountDownLatch(maxScanners)
+                    scannerPool   = CountDownLatch(maxScanners)
                     scansComplete = CountDownLatch(maxScanners)
                 }
             }

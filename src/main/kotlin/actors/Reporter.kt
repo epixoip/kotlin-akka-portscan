@@ -8,7 +8,7 @@ import messages.GetReport
 class Reporter : UntypedAbstractActor() {
     private val results = HashMap<String, HashMap<Int, Pair<State, MutableList<String>>>>()
 
-    override fun onReceive(message: Any?) = when(message) {
+    override fun onReceive(message: Any?) = when (message) {
         is AddReport -> addReport(message)
         is GetReport -> getReport()
         else         -> {}
@@ -16,14 +16,10 @@ class Reporter : UntypedAbstractActor() {
 
     private fun addReport(message: AddReport) {
         if (results[message.host] == null) {
-            if (message.banner == null) {
-                results[message.host] = hashMapOf(
-                    message.port to Pair(message.state, mutableListOf())
-                )
+            results[message.host] = if (message.banner == null) {
+                hashMapOf(message.port to Pair(message.state, mutableListOf()))
             } else {
-                results[message.host] = hashMapOf(
-                    message.port to Pair(message.state, mutableListOf(message.banner!!))
-                )
+                hashMapOf(message.port to Pair(message.state, mutableListOf(message.banner!!)))
             }
         } else {
             val state = results[message.host]!![message.port]

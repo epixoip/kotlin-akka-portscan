@@ -21,30 +21,30 @@ class Scanner : UntypedAbstractActor() {
     private lateinit var host : String
     private var port = 0
 
-    override fun onReceive(msg: Any?) {
-        log.debug("onReceive() received message of ${msg?.javaClass}")
+    override fun onReceive(message: Any?) {
+        log.debug("onReceive() received message of ${message?.javaClass}")
 
-        when(msg) {
+        when (message) {
             is Tcp.Connected -> connected()
-            is Scan          -> scan(msg)
-            else             -> closedOrFiltered(msg)
+            is Scan          -> scan(message)
+            else             -> closedOrFiltered(message)
         }
     }
 
     private fun onConnected(connection: ActorRef) = receiveBuilder()
-        .matchAny { msg ->
-            log.debug("onConnected() received message of ${msg.javaClass}")
+        .matchAny { message ->
+            log.debug("onConnected() received message of ${message.javaClass}")
 
-            when (msg) {
-                is Tcp.Received -> received(msg)
+            when (message) {
+                is Tcp.Received -> received(message)
                 else            -> close()
             }
         }
         .build()
 
-    private fun scan(msg: Scan) {
-        host = msg.host
-        port = msg.port
+    private fun scan(message: Scan) {
+        host = message.host
+        port = message.port
 
         Tcp.get(context.system)
             .manager()
@@ -83,8 +83,8 @@ class Scanner : UntypedAbstractActor() {
         context.become(onConnected(sender))
     }
 
-    private fun received(msg: Tcp.Received) {
-        val banner = String(msg.data().toArray()).trim()
+    private fun received(message: Tcp.Received) {
+        val banner = String(message.data().toArray()).trim()
 
         log.debug("$host:$port replied with $banner")
 
@@ -100,9 +100,9 @@ class Scanner : UntypedAbstractActor() {
             .tell(report, self)
     }
 
-    private fun closedOrFiltered(msg: Any?) {
-        val state = if (msg is Tcp.CommandFailed) {
-            val cause = msg.causedByString()
+    private fun closedOrFiltered(message: Any?) {
+        val state = if (message is Tcp.CommandFailed) {
+            val cause = message.causedByString()
 
             when {
                 cause.contains("Connect timeout")    -> State.FILTERED
@@ -113,7 +113,7 @@ class Scanner : UntypedAbstractActor() {
                 }
             }
         } else {
-            log.warning("Error: $host:$port: ${msg?.javaClass}")
+            log.warning("Error: $host:$port: ${message?.javaClass}")
             State.ERROR
         }
 

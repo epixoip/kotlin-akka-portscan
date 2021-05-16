@@ -54,7 +54,7 @@ not see the pretty colors :(
 
 ### Compiling
 
-```mvn clean:clean kotlin:compile resources:resources jar:jar exec:java```
+```mvn clean:clean kotlin:compile resources:resources assembly:single jar:jar exec:java```
 
 ### Executing
 
